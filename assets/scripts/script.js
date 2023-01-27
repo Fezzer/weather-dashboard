@@ -8,7 +8,7 @@ function getGeocode(search, callback) {
 
   fetch(queryUrl)
     .then(response => response.json())
-    .then(data => callback(data[0].lat, data[0].lon, displayTodaysForecast))
+    .then(data => callback(data[0].lat, data[0].lon, displayForecasts))
     .catch(console.log);
 }
 
@@ -22,32 +22,37 @@ function getWeatherForecast(lat, lon, callback) {
     .catch(console.log);
 }
 
-// Displays a object at the bottom of the page.
-function displayObject(object) {
-  let pre = document.getElementById("object-display");
+// 
+function displayFields(forecast, prefix) {
+  const icon = document.getElementById(`${prefix}-icon`);
+  icon.setAttribute("src", `http://openweathermap.org/img/wn/${forecast.weather[0].icon}.png`);
+  icon.setAttribute("alt", `${forecast.weather[0].main} - ${forecast.weather[0].description}`);
 
-  if (!pre) {
-    pre = document.createElement("pre");
-    pre.setAttribute("id", "object-display");
-    document.body.append(pre);
-  }
+  document.getElementById(`${prefix}-date`).textContent = forecast.dt_txt;
+  document.getElementById(`${prefix}-temp`).textContent = `Temperature: ${(forecast.main.temp - 273.15, 1).toFixed(1)}\u{b0}`;
+  document.getElementById(`${prefix}-wind`).textContent = `Wind: ${forecast.wind.speed} kph`;
+  document.getElementById(`${prefix}-humidity`).textContent = `Humidity: ${forecast.main.humidity}%`;
+}
 
-  pre.textContent = JSON.stringify(object, null, 2);
+// Displays all the forecasts on the page.
+function displayForecasts(forecast) {
+  displayTodaysForecast(forecast);
+  display5DayForecast(forecast);
 }
 
 // Displays the weather forecast for today.
 function displayTodaysForecast(forecast) {
-  var today = forecast.list[0];
+  const today = forecast.list[0];
 
-  document.getElementById("today-location").textContent = `${forecast.city.name} (${today.dt_txt})`;
+  document.getElementById("today-location").textContent = forecast.city.name;
+  displayFields(today, "today");
+}
 
-  const icon = document.getElementById("today-icon");
-  icon.setAttribute("src", `http://openweathermap.org/img/wn/${today.weather[0].icon}.png`);
-  icon.setAttribute("alt", `${today.weather[0].main} - ${today.weather[0].description}`);
-
-  document.getElementById("today-temp").textContent = `Temperature: ${(today.main.temp - 273.15, 1).toFixed(1)}\u{b0}`;
-  document.getElementById("today-wind").textContent = `Wind: ${today.wind.speed} kph`;
-  document.getElementById("today-humidity").textContent = `Humidity: ${today.main.humidity}%`;
+//
+function display5DayForecast(forecast) {
+  forecast.list
+    .filter(x => x.dt_txt.endsWith("12:00:00"))
+    .forEach((f, i) => displayFields(f, `day${i + 1}`));
 }
 
 // Handler for the search button click.
