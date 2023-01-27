@@ -8,12 +8,7 @@ function getGeocode(search, callback) {
 
   fetch(queryUrl)
     .then(response => response.json())
-    .then(data => {
-      const element = data[0];
-      console.log(element);
-      console.log(`lat: ${element.lat}; log: ${element.lon}`);
-      callback(data[0].lat, data[0].lon, displayObject);
-    })
+    .then(data => callback(data[0].lat, data[0].lon, displayTodaysForecast))
     .catch(console.log);
 }
 
@@ -40,7 +35,20 @@ function displayObject(object) {
   pre.textContent = JSON.stringify(object, null, 2);
 }
 
-// Displays the weather forecast.
+// Displays the weather forecast for today.
+function displayTodaysForecast(forecast) {
+  var today = forecast.list[0];
+
+  document.getElementById("today-location").textContent = `${forecast.city.name} (${today.dt_txt})`;
+
+  const icon = document.getElementById("today-icon");
+  icon.setAttribute("src", `http://openweathermap.org/img/wn/${today.weather[0].icon}.png`);
+  icon.setAttribute("alt", `${today.weather[0].main} - ${today.weather[0].description}`);
+
+  document.getElementById("today-temp").textContent = `Temperature: ${(today.main.temp - 273.15, 1).toFixed(1)}\u{b0}`;
+  document.getElementById("today-wind").textContent = `Wind: ${today.wind.speed} kph`;
+  document.getElementById("today-humidity").textContent = `Humidity: ${today.main.humidity}%`;
+}
 
 // Handler for the search button click.
 function searchButtonClick(event) {
