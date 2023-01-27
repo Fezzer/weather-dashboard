@@ -22,8 +22,8 @@ function getWeatherForecast(lat, lon, callback) {
     .catch(console.log);
 }
 
-// 
-function displayFields(forecast, prefix) {
+// Displays a daily forecast.
+function displayDailyForecast(forecast, prefix) {
   const icon = document.getElementById(`${prefix}-icon`);
   icon.setAttribute("src", `http://openweathermap.org/img/wn/${forecast.weather[0].icon}.png`);
   icon.setAttribute("alt", `${forecast.weather[0].main} - ${forecast.weather[0].description}`);
@@ -45,14 +45,14 @@ function displayTodaysForecast(forecast) {
   const today = forecast.list[0];
 
   document.getElementById("today-location").textContent = forecast.city.name;
-  displayFields(today, "today");
+  displayDailyForecast(today, "today");
 }
 
-//
+// Displays the future 5 day forecasts.
 function display5DayForecast(forecast) {
   forecast.list
     .filter(x => x.dt_txt.endsWith("12:00:00"))
-    .forEach((f, i) => displayFields(f, `day${i + 1}`));
+    .forEach((f, i) => displayDailyForecast(f, `day${i + 1}`));
 }
 
 // Handler for the search button click.
