@@ -1,26 +1,9 @@
 const API_KEY = "e2fbfb8cefa7140e915e1270b734b104";
 const GEOCODER_ROOT_URL = "http://api.openweathermap.org/geo/1.0/direct";
-const FORECAST_ROOT_URL = "http://api.openweathermap.org/data/2.5/forecast"
+const FORECAST_ROOT_URL = "http://api.openweathermap.org/data/2.5/forecast";
+const SEARCH_HISTORY_KEY = "search-history";
 
-// Makes a call to the geocoder endpoint and forwards the result to the callback.
-function getGeocode(search, callback) {
-  const queryUrl = `${GEOCODER_ROOT_URL}?q=${search}&limit=5&appid=${API_KEY}`;
-
-  fetch(queryUrl)
-    .then(response => response.json())
-    .then(data => callback(data[0].lat, data[0].lon, displayForecasts))
-    .catch(console.log);
-}
-
-// Makes a call to the 5 day weather forecast endpoint and forwards the result to the callback.
-function getWeatherForecast(lat, lon, callback) {
-  const queryUrl = `${FORECAST_ROOT_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
-
-  fetch(queryUrl)
-    .then(response => response.json())
-    .then(callback)
-    .catch(console.log);
-}
+var searchHistory;
 
 // Displays a daily forecast.
 function displayDailyForecast(forecast, prefix) {
@@ -55,6 +38,54 @@ function display5DayForecast(forecast) {
     .forEach((f, i) => displayDailyForecast(f, `day${i + 1}`));
 }
 
+// Adds search history buttons.
+function displaySearchHistory(history) {
+  var container = document.getElementById("history");
+  container.textContent = "";
+
+  history.forEach(e => {
+    var button = document.createElement("button");
+    button.textContent = e.name;
+    button.dataset.lat = e.lat;
+    button.dataset.lon = e.lon;
+
+    container.append(button);
+  });
+}
+
+// Makes a call to the geocoder endpoint and forwards the result to the callback.
+function getGeocode(search, callback) {
+  const queryUrl = `${GEOCODER_ROOT_URL}?q=${search}&limit=5&appid=${API_KEY}`;
+
+  fetch(queryUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.length) {
+        return;
+      }
+
+      var location = data[0];
+      delete location["local_names"];
+
+      callback(location.lat, location.lon, displayForecasts);
+      
+      searchHistory.unshift(location);
+      displaySearchHistory(searchHistory);
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
+    })
+    .catch(console.log);
+}
+
+// Makes a call to the 5 day weather forecast endpoint and forwards the result to the callback.
+function getWeatherForecast(lat, lon, callback) {
+  const queryUrl = `${FORECAST_ROOT_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+
+  fetch(queryUrl)
+    .then(response => response.json())
+    .then(callback)
+    .catch(console.log);
+}
+
 // Handler for the search button click.
 function searchButtonClick(event) {
   event.preventDefault();
@@ -63,4 +94,24 @@ function searchButtonClick(event) {
   getGeocode(search, getWeatherForecast);
 }
 
-document.getElementById("search-button").addEventListener("click", searchButtonClick);
+// Handler for a history button click.
+function historyButtonClick(event) {
+  var target = event.target;
+
+  if (!target.matches("button")) {
+    return;
+  }
+
+  getWeatherForecast(target.dataset.lat, target.dataset.lon, displayForecasts);
+}
+
+// Initialise the application.
+function init() {
+  document.getElementById("search-button").addEventListener("click", searchButtonClick);
+  document.getElementById("history").addEventListener("click", historyButtonClick);
+
+  searchHistory = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY)) ?? [];
+  displaySearchHistory(searchHistory);
+}
+
+init();
