@@ -2,6 +2,7 @@ const API_KEY = "e2fbfb8cefa7140e915e1270b734b104";
 const GEOCODER_ROOT_URL = "http://api.openweathermap.org/geo/1.0/direct";
 const FORECAST_ROOT_URL = "http://api.openweathermap.org/data/2.5/forecast";
 const SEARCH_HISTORY_KEY = "search-history";
+const SEARCH_HISTORY_SIZE = 7;
 
 var searchHistory;
 
@@ -31,6 +32,25 @@ function displayTodaysForecast(forecast) {
   displayDailyForecast(today, "today");
 }
 
+// Updates the search history with the specified location.
+function updateSearchHistory(location) {
+  var loc = searchHistory.find(e => e.name === location.name);
+
+  if (!loc) {
+    loc = location;
+    searchHistory.push(loc);
+  }
+  
+  loc.lastUsed = luxon.DateTime.now().toSeconds();
+  searchHistory.sort((a, b) => b.lastUsed - a.lastUsed);
+
+  if (searchHistory.length > SEARCH_HISTORY_SIZE) {
+    searchHistory = searchHistory.slice(0, SEARCH_HISTORY_SIZE);
+  }
+
+  localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
+}
+
 // Displays the future 5 day forecasts.
 function display5DayForecast(forecast) {
   forecast.list
@@ -38,16 +58,15 @@ function display5DayForecast(forecast) {
     .forEach((f, i) => displayDailyForecast(f, `day${i + 1}`));
 }
 
-// Adds search history buttons.
+// Clears and displays search history buttons.
 function displaySearchHistory(history) {
   var container = document.getElementById("history");
   container.textContent = "";
 
-  history.forEach(e => {
+  history.forEach((element, i) => {
     var button = document.createElement("button");
-    button.textContent = e.name;
-    button.dataset.lat = e.lat;
-    button.dataset.lon = e.lon;
+    button.textContent = element.name;
+    button.dataset.index = i;
 
     container.append(button);
   });
@@ -66,12 +85,9 @@ function getGeocode(search, callback) {
 
       var location = data[0];
       delete location["local_names"];
-
       callback(location.lat, location.lon, displayForecasts);
-      
-      searchHistory.unshift(location);
+      updateSearchHistory(location);
       displaySearchHistory(searchHistory);
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
     })
     .catch(console.log);
 }
@@ -102,7 +118,10 @@ function historyButtonClick(event) {
     return;
   }
 
-  getWeatherForecast(target.dataset.lat, target.dataset.lon, displayForecasts);
+  var location = searchHistory[target.dataset.index];
+  getWeatherForecast(location.lat, location.lon, displayForecasts);
+  updateSearchHistory(location);
+  displaySearchHistory(searchHistory);
 }
 
 // Initialise the application.
