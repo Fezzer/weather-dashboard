@@ -1,0 +1,11 @@
+#today {
+    background-color: deepskyblue;
+    border: 1 solid deepskyblue;
+    border-radius: 4px;
+}
+
+#future>div {
+    background-color: skyblue;
+    border: 1 solid skyblue;
+    border-radius: 4px;
+}

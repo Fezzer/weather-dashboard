@@ -7,9 +7,9 @@ const SEARCH_HISTORY_SIZE = 7;
 var searchHistory;
 
 // Displays a daily forecast.
-function displayDailyForecast(forecast, parent) {
+function displayDailyForecast(forecast, parent, largeImage) {
   const icon = document.createElement("img");
-  icon.setAttribute("src", `http://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png`);
+  icon.setAttribute("src", `http://openweathermap.org/img/wn/${forecast.weather[0].icon}${largeImage ? "@2x" : ""}.png`);
   icon.setAttribute("alt", `${forecast.weather[0].main} ${forecast.weather[0].description}`);
 
   const temp = document.createElement("div");
@@ -24,12 +24,6 @@ function displayDailyForecast(forecast, parent) {
   parent.append(icon, temp, wind, humidity);
 }
 
-// Displays all the forecasts on the page.
-function displayForecasts(forecast) {
-  displayTodaysForecast(forecast);
-  display5DayForecast(forecast);
-}
-
 // Displays the weather forecast for today.
 function displayTodaysForecast(forecast) {
   const today = forecast.list[0];
@@ -37,14 +31,50 @@ function displayTodaysForecast(forecast) {
   const todayContainer = document.getElementById("today");
   todayContainer.textContent = "";
 
-  const location = document.createElement("h3");
-  location.textContent = forecast.city.name;
-
-  const day = document.createElement("h4");
+  const day = document.createElement("div");
+  day.classList.add("h3");
   day.textContent = `Today @ ${luxon.DateTime.fromSeconds(today.dt).toFormat("h:mma")}`;
 
-  todayContainer.append(location, day);
-  displayDailyForecast(today, todayContainer);
+  todayContainer.append(day);
+  displayDailyForecast(today, todayContainer, true);
+}
+
+// Displays the future 5 day forecasts.
+function display5DayForecast(forecast) {
+  const futureContainer = document.getElementById("future");
+  futureContainer.textContent = "";
+
+  forecast.list
+    .filter((_, i) => (i + 1) % 8 === 0)
+    .forEach((f, i) => {
+      var date = luxon.DateTime.fromSeconds(f.dt);
+      const column = document.createElement("div");
+      column.classList.add("col", "p-2");
+
+      if (i > 0) {
+        column.classList.add("ml-3")
+      }
+
+      const day = document.createElement("div");
+      day.classList.add("h5");
+      day.innerHTML = `${i === 0 ? "Tomorrow" : date.toFormat("cccc")}<br>@ ${date.toFormat("h:mma")}`;
+      column.append(day);
+
+      displayDailyForecast(f, column);
+
+      futureContainer.append(column);
+    });
+}
+
+// Displays all the forecasts on the page.
+function displayForecasts(location, forecast) {
+  const locationElement = document.getElementById("location");
+  locationElement.textContent = `${location.name}${location.state ? ", " + location.state : ""}`
+  displayTodaysForecast(forecast);
+  display5DayForecast(forecast);
+  
+  const forecastElement = document.getElementById("forecast");
+  forecastElement.classList.remove("invisible");
 }
 
 // Updates the search history with the specified location.
@@ -65,31 +95,6 @@ function updateSearchHistory(location) {
   }
 
   localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
-}
-
-// Displays the future 5 day forecasts.
-function display5DayForecast(forecast) {
-  const forecastContainer = document.getElementById("forecast");
-  forecastContainer.textContent = "";
-
-  const header = document.createElement("h3");
-  header.textContent = "5 Day Forecast";
-
-  forecastContainer.append(header);
-
-  forecast.list
-    .filter((_, i) => (i + 1) % 8 === 0)
-    .forEach((f, i) => {
-      var date = luxon.DateTime.fromSeconds(f.dt);
-      const container = document.createElement("div");
-
-      const day = document.createElement("h4").textContent = `${i === 0 ? "Tomorrow" : date.toFormat("cccc")} @ ${date.toFormat("h:mma")}`;
-      container.append(day);
-
-      displayDailyForecast(f, container);
-
-      forecastContainer.append(container);
-    });
 }
 
 // Clears and displays search history buttons.
@@ -120,7 +125,7 @@ function getGeocode(search, callback) {
 
       const location = data[0];
       delete location["local_names"];
-      callback(location.lat, location.lon, displayForecasts);
+      callback(location, displayForecasts);
       updateSearchHistory(location);
       displaySearchHistory(searchHistory);
     })
@@ -128,12 +133,12 @@ function getGeocode(search, callback) {
 }
 
 // Makes a call to the 5 day weather forecast endpoint and forwards the result to the callback.
-function getWeatherForecast(lat, lon, callback) {
-  const queryUrl = `${FORECAST_ROOT_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+function getWeatherForecast(location, callback) {
+  const queryUrl = `${FORECAST_ROOT_URL}?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}`;
 
   fetch(queryUrl)
     .then(response => response.json())
-    .then(callback)
+    .then(data => callback(location, data))
     .catch(console.log);
 }
 
@@ -154,7 +159,7 @@ function historyButtonClick(event) {
   }
 
   const location = searchHistory[target.dataset.index];
-  getWeatherForecast(location.lat, location.lon, displayForecasts);
+  getWeatherForecast(location, displayForecasts);
   updateSearchHistory(location);
   displaySearchHistory(searchHistory);
 }
