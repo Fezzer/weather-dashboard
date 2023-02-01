@@ -12,9 +12,14 @@ function displayDailyForecast(forecast, parent) {
   icon.setAttribute("src", `http://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png`);
   icon.setAttribute("alt", `${forecast.weather[0].main} ${forecast.weather[0].description}`);
 
-  const temp = document.createElement("div").textContent = `Temperature: ${(forecast.main.temp - 273.15, 1).toFixed(1)}\u{b0}`;
-  const wind = document.createElement("div").textContent = `Wind: ${forecast.wind.speed} KPH`;
-  const humidity = document.createElement("div").textContent = `Humidity: ${forecast.main.humidity} %`;
+  const temp = document.createElement("div");
+  temp.textContent = `Temperature: ${(forecast.main.temp - 273.15, 1).toFixed(1)}\u{b0}`;
+
+  const wind = document.createElement("div");
+  wind.textContent = `Wind: ${forecast.wind.speed} KPH`;
+
+  const humidity = document.createElement("div");
+  humidity.textContent = `Humidity: ${forecast.main.humidity} %`;
 
   parent.append(icon, temp, wind, humidity);
 }
@@ -44,7 +49,8 @@ function displayTodaysForecast(forecast) {
 
 // Updates the search history with the specified location.
 function updateSearchHistory(location) {
-  let loc = searchHistory.find(e => e.name === location.name);
+  let loc = searchHistory.find(e => 
+    e.name === location.name && e.state === location.state && e.country === location.country);
 
   if (!loc) {
     loc = location;
@@ -94,6 +100,7 @@ function displaySearchHistory(history) {
   history.forEach((element, i) => {
     const button = document.createElement("button");
     button.textContent = element.name;
+    button.classList.add("btn", "btn-info", "w-100", "mb-2");
     button.dataset.index = i;
 
     container.append(button);

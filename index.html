@@ -11,32 +11,27 @@
 </head>
 
 <body>
-  <header class="container-fluid text-center text-white bg-dark p-2 weather-header">
+  <header class="container-fluid text-center text-white bg-dark p-2 mb-4">
     <h1>Weather Dashboard</h1>
   </header>
 
   <!-- max-width for ultra wide resolutions -->
   <div class="container-fluid" style="max-width: 1400px">
     <div class="row">
-      <aside class="col-lg-3 pb-3">
-        <h2 id="form-heading" class="mt-1 h3 form-label">
-          Search for a City:
-        </h2>
-        <form id="search-form" class="form">
-          <div class="form-inline form-group">
-            <div class="input-group">
-              <input class="form-input weather-search" type="text" id="search-input" placeholder="London"
-                aria-labelledby="form-heading" aria-controls="today forecast" />
-              <div class="input-group-append">
-                <button type="submit" class="btn search-button" id="search-button" aria-label="submit search">
-                  Search
-                </button>
-                <hr class="hr weather-hr" />
-              </div>
-            </div>
+      <aside class="col-lg-3">
+        <form>
+          <div class="form-group">
+            <label for="search-input" class="h3">Search for a city</label>
+            <input type="text" class="form-control" id="search-input">
           </div>
+          <button type="submit" class="btn btn-primary" id="search-button">Search</button>
         </form>
-        <div class="list-group" id="history"></div>
+
+        <hr>
+        <div class="h4">Previous searches</div>
+
+        <div id="history">
+        </div>
       </aside>
 
       <div class="col-lg-9 pb-3">
