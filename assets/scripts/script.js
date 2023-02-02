@@ -1,6 +1,6 @@
 const API_KEY = "e2fbfb8cefa7140e915e1270b734b104";
-const GEOCODER_ROOT_URL = "http://api.openweathermap.org/geo/1.0/direct";
-const FORECAST_ROOT_URL = "http://api.openweathermap.org/data/2.5/forecast";
+const GEOCODER_ROOT_URL = "https://api.openweathermap.org/geo/1.0/direct";
+const FORECAST_ROOT_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const SEARCH_HISTORY_KEY = "search-history";
 const SEARCH_HISTORY_SIZE = 7;
 
